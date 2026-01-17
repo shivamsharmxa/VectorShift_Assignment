@@ -5,6 +5,14 @@
 /.pnp
 .pnp.js
 
+
+# Ignore review / notes
+CODE_REVIEW.md
+ARCHITECTURE.md
+FINAL_CHECKLIST.md
+IMPLEMENTATION_SUMMARY.md
+
+
 # testing
 /coverage
 

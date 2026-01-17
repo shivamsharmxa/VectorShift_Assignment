@@ -1,7 +1,7 @@
-// toolbar.js
+// components/layout/Toolbar.js
 
 import { useState } from 'react';
-import { DraggableNode } from './draggableNode';
+import { DraggableNode } from './DraggableNode';
 import {
     FileText,
     ListFilter,
@@ -15,7 +15,7 @@ import {
     Combine
 } from 'lucide-react';
 
-export const PipelineToolbar = () => {
+export const Toolbar = () => {
     const [searchTerm, setSearchTerm] = useState('');
 
     const nodeTemplates = [

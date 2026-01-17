@@ -1,3 +1,5 @@
+// components/layout/TopBar.js
+
 export const TopBar = () => {
     return (
         <div className="top-bar">

@@ -1,6 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from typing import List, Dict, Any
 
 app = FastAPI()
@@ -8,15 +8,30 @@ app = FastAPI()
 # Add CORS middleware to allow frontend requests
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000"],  # Specific origin only
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST"],  # Only needed methods
+    allow_headers=["Content-Type"],  # Only needed headers
 )
 
 class PipelineData(BaseModel):
     nodes: List[Dict[str, Any]]
     edges: List[Dict[str, Any]]
+    
+    @validator('nodes')
+    def validate_nodes(cls, v):
+        if not isinstance(v, list):
+            raise ValueError('nodes must be a list')
+        for node in v:
+            if 'id' not in node:
+                raise ValueError('Each node must have an id field')
+        return v
+    
+    @validator('edges')
+    def validate_edges(cls, v):
+        if not isinstance(v, list):
+            raise ValueError('edges must be a list')
+        return v
 
 @app.get('/')
 def read_root():
@@ -26,6 +41,30 @@ def read_root():
 def parse_pipeline(pipeline: PipelineData):
     nodes = pipeline.nodes
     edges = pipeline.edges
+    
+    # Validate edge references
+    node_ids = {node['id'] for node in nodes}
+    for edge in edges:
+        source = edge.get('source')
+        target = edge.get('target')
+        
+        if not source or not target:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Edge missing source or target: {edge}"
+            )
+        
+        if source not in node_ids:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Edge references non-existent source node: {source}"
+            )
+        
+        if target not in node_ids:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Edge references non-existent target node: {target}"
+            )
     
     num_nodes = len(nodes)
     num_edges = len(edges)
@@ -85,3 +124,4 @@ def check_is_dag(nodes: List[Dict], edges: List[Dict]) -> bool:
                 return False
     
     return True
+

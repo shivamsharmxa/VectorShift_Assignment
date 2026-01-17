@@ -1,20 +1,24 @@
-import { PipelineToolbar } from './toolbar';
-import { PipelineUI } from './ui';
-import { SubmitButton } from './submit';
-import { TopBar } from './TopBar';
+import { Toolbar } from './components/layout/Toolbar';
+import { TopBar } from './components/layout/TopBar';
+import { Canvas } from './components/layout/Canvas';
+import { SubmitButton } from './components/common/SubmitButton';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
+
 
 function App() {
   return (
-    <div className="app-container">
-      <TopBar />
-      <div className="app-main">
-        <PipelineToolbar />
-        <div className="app-canvas">
-          <PipelineUI />
-          <SubmitButton />
+    <ErrorBoundary>
+      <div className="app-container">
+        <TopBar />
+        <div className="app-main">
+          <Toolbar />
+          <div className="app-canvas">
+            <Canvas />
+            <SubmitButton />
+          </div>
         </div>
       </div>
-    </div>
+    </ErrorBoundary>
   );
 }
 
