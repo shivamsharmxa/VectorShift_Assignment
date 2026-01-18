@@ -6,6 +6,7 @@ import { BaseNode } from './BaseNode';
 import { Type } from 'lucide-react';
 import { useStore } from '../../store/pipelineStore';
 import { APP_CONFIG } from '../../utils';
+import { detectVariables, createNodeComparison } from '../../utils/nodeHelpers';
 
 export const TextNode = memo(({ id, data, selected }) => {
     const updateNodeField = useStore((state) => state.updateNodeField);
@@ -16,6 +17,12 @@ export const TextNode = memo(({ id, data, selected }) => {
 
     const textareaRef = useRef(null);
 
+    // FIX: Detect variables on mount (handles default text with variables)
+    useEffect(() => {
+        const detectedVars = detectVariables(currText);
+        setVariables(detectedVars);
+    }, []); // Run once on mount
+
     // Auto-resize height
     useEffect(() => {
         if (textareaRef.current) {
@@ -24,7 +31,7 @@ export const TextNode = memo(({ id, data, selected }) => {
         }
     }, [currText]);
 
-    // Handle variable detection and width resizing
+    // Handle text changes - width AND variable detection
     const handleTextChange = (e) => {
         const newText = e.target.value;
         setCurrText(newText);
@@ -39,18 +46,11 @@ export const TextNode = memo(({ id, data, selected }) => {
         );
 
         setNodeWidth(calculatedWidth);
-        updateNodeField(id, 'width', calculatedWidth); // Persist width
+        updateNodeField(id, 'width', calculatedWidth); // FIX: Persist width to store
 
-        // Detect variables with proper JS naming rules
-        const regex = /\{\{([a-zA-Z_$][a-zA-Z0-9_$]*)\}\}/g;
-        let match;
-        const detectedVariables = [];
-        while ((match = regex.exec(newText)) !== null) {
-            if (!detectedVariables.includes(match[1])) {
-                detectedVariables.push(match[1]);
-            }
-        }
-        setVariables(detectedVariables);
+        // Detect variables (extracted to utility)
+        const detectedVars = detectVariables(newText);
+        setVariables(detectedVars);
     };
 
     // Generate handles dynamically
@@ -82,10 +82,6 @@ export const TextNode = memo(({ id, data, selected }) => {
             </div>
         </BaseNode>
     );
-}, (prevProps, nextProps) => {
-    return prevProps.id === nextProps.id &&
-        prevProps.selected === nextProps.selected &&
-        JSON.stringify(prevProps.data) === JSON.stringify(nextProps.data);
-});
+}, createNodeComparison(['text', 'width'])); // PERFORMANCE FIX: Shallow comparison instead of JSON.stringify
 
 TextNode.displayName = 'TextNode';
